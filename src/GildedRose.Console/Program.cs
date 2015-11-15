@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace GildedRose.Console
 {
-    class Program
+    public class Program
     {
         IList<Item> Items;
         static void Main(string[] args)
@@ -34,83 +35,102 @@ namespace GildedRose.Console
 
         }
 
-        public void UpdateQuality()
+        public void UpdateQuality(IList<Item> items = null)
         {
-            for (var i = 0; i < Items.Count; i++)
+            if (items == null)
+                items = Items;
+
+            foreach (var i in items)
             {
-                if (Items[i].Name != "Aged Brie" && Items[i].Name != "Backstage passes to a TAFKAL80ETC concert")
-                {
-                    if (Items[i].Quality > 0)
-                    {
-                        if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                        {
-                            Items[i].Quality = Items[i].Quality - 1;
-                        }
-                    }
-                }
-                else
-                {
-                    if (Items[i].Quality < 50)
-                    {
-                        Items[i].Quality = Items[i].Quality + 1;
-
-                        if (Items[i].Name == "Backstage passes to a TAFKAL80ETC concert")
-                        {
-                            if (Items[i].SellIn < 11)
-                            {
-                                if (Items[i].Quality < 50)
-                                {
-                                    Items[i].Quality = Items[i].Quality + 1;
-                                }
-                            }
-
-                            if (Items[i].SellIn < 6)
-                            {
-                                if (Items[i].Quality < 50)
-                                {
-                                    Items[i].Quality = Items[i].Quality + 1;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                {
-                    Items[i].SellIn = Items[i].SellIn - 1;
-                }
-
-                if (Items[i].SellIn < 0)
-                {
-                    if (Items[i].Name != "Aged Brie")
-                    {
-                        if (Items[i].Name != "Backstage passes to a TAFKAL80ETC concert")
-                        {
-                            if (Items[i].Quality > 0)
-                            {
-                                if (Items[i].Name != "Sulfuras, Hand of Ragnaros")
-                                {
-                                    Items[i].Quality = Items[i].Quality - 1;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            Items[i].Quality = Items[i].Quality - Items[i].Quality;
-                        }
-                    }
-                    else
-                    {
-                        if (Items[i].Quality < 50)
-                        {
-                            Items[i].Quality = Items[i].Quality + 1;
-                        }
-                    }
-                }
+                var updater = QualityUpdater.GetUpdaterForItem(i);
+                updater.UpdateQuality(i);
+                
             }
+
+           
         }
 
     }
+
+
+    public abstract class QualityUpdater
+    {
+        public static QualityUpdater GetUpdaterForItem(Item i)
+        {
+            if (i.Name == "Aged Brie")
+                return new BrieQualityUpdater();
+            else if (i.Name == "Sulfuras, Hand of Ragnaros")
+                return new LegendaryQualityUpdater();
+            else if (i.Name == "Backstage passes to a TAFKAL80ETC concert")
+                return new BackstagePassQualityUpdater();
+            else if (i.Name.StartsWith("Conjured"))
+                return new ConjuredQualityUpdater();
+            else
+                return new StandardQualityUpdater();
+        }
+        public void UpdateQuality(Item i)
+        {
+            ProcessQuality(i);
+            if(!(this is LegendaryQualityUpdater))
+                i.SellIn--;
+
+        }
+        protected abstract void ProcessQuality(Item i);
+    }
+
+    public class StandardQualityUpdater : QualityUpdater
+    {
+        protected override void ProcessQuality(Item i)
+        {
+            if(i.Quality > 0)
+                i.Quality--;
+        }
+    }
+
+    public class BrieQualityUpdater : QualityUpdater
+    {
+        protected override void ProcessQuality(Item i)
+        {
+            if(i.Quality < 50)
+                i.Quality++;
+        }
+    }
+
+    public class BackstagePassQualityUpdater : QualityUpdater
+    {
+        protected override void ProcessQuality(Item i)
+        {
+            if (i.SellIn < 1)
+                i.Quality = 0;
+            else if (i.SellIn <= 5 && i.Quality < 48)
+                i.Quality = i.Quality + 3;
+            else if (i.SellIn <= 10 && i.Quality < 49)
+                i.Quality = i.Quality + 2;
+            else
+            {
+                i.Quality++;
+            }
+        }
+    }
+
+    public class LegendaryQualityUpdater : QualityUpdater
+    {
+        protected override void ProcessQuality(Item i){}
+    }
+
+    public class ConjuredQualityUpdater : QualityUpdater
+    {
+        protected override void ProcessQuality(Item i)
+        {
+            if (i.Quality < 2)
+                i.Quality = 0;
+            else
+                i.Quality = i.Quality - 2;
+        }
+    }
+
+
+
 
     public class Item
     {
