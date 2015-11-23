@@ -43,20 +43,16 @@ namespace GildedRose.Console
             foreach (var i in items)
             {
                 var updater = QualityUpdater.GetUpdaterForItem(i);
-                updater.UpdateQuality(i);
-                
-            }
-
-           
+                updater.UpdateQuality(i);                
+            }           
         }
-
     }
-
 
     public abstract class QualityUpdater
     {
         public static QualityUpdater GetUpdaterForItem(Item i)
         {
+            // select the correct update strategy
             if (i.Name == "Aged Brie")
                 return new BrieQualityUpdater();
             else if (i.Name == "Sulfuras, Hand of Ragnaros")
@@ -68,76 +64,85 @@ namespace GildedRose.Console
             else
                 return new StandardQualityUpdater();
         }
+
+
         public void UpdateQuality(Item i)
         {
-            ProcessQuality(i);
-            if(!(this is LegendaryQualityUpdater))
-                i.SellIn--;
+            var degradation = GetDegradation(i);
 
+            if (degradation != 0)
+            {
+                var degradationFactor = i.SellIn < 0 ? 2 : 1;
+                var newQuality = i.Quality + (degradation * degradationFactor);
+                i.Quality = Math.Max(0, Math.Min(newQuality, 50));  //maxium of 50, minimum of 0
+            }
+
+            if(!(this is LegendaryQualityUpdater))  // dont like this
+                i.SellIn--;
         }
-        protected abstract void ProcessQuality(Item i);
+
+        /// <summary>
+        /// Calculate quality degradation after 1 day
+        /// </summary>
+        /// <param name="i">Item</param>
+        /// <returns>degradation amount</returns>
+        protected abstract int GetDegradation(Item i);
     }
 
     public class StandardQualityUpdater : QualityUpdater
     {
-        protected override void ProcessQuality(Item i)
+        protected override int GetDegradation(Item i)
         {
-            if(i.Quality > 0)
-                i.Quality--;
+            return -1;
         }
     }
 
     public class BrieQualityUpdater : QualityUpdater
     {
-        protected override void ProcessQuality(Item i)
+        protected override int GetDegradation(Item i)
         {
-            if(i.Quality < 50)
-                i.Quality++;
+            return +1;
         }
     }
 
     public class BackstagePassQualityUpdater : QualityUpdater
     {
-        protected override void ProcessQuality(Item i)
+        protected override int GetDegradation(Item i)
         {
             if (i.SellIn < 1)
-                i.Quality = 0;
-            else if (i.SellIn <= 5 && i.Quality < 48)
-                i.Quality = i.Quality + 3;
-            else if (i.SellIn <= 10 && i.Quality < 49)
-                i.Quality = i.Quality + 2;
-            else
             {
-                i.Quality++;
+                i.Quality = i.Quality + (i.Quality * -1); //force to zero
+                return 0; // we've handled it
             }
+            else if (i.SellIn <= 5 && i.Quality < 48)
+                return 3;
+            else if (i.SellIn <= 10 && i.Quality < 49)
+                return 2;
+            else
+                return 1;
         }
     }
 
     public class LegendaryQualityUpdater : QualityUpdater
     {
-        protected override void ProcessQuality(Item i){}
+        protected override int GetDegradation(Item i)
+        {
+            return 0;
+        }        
     }
 
     public class ConjuredQualityUpdater : QualityUpdater
     {
-        protected override void ProcessQuality(Item i)
+        protected override int GetDegradation(Item i)
         {
-            if (i.Quality < 2)
-                i.Quality = 0;
-            else
-                i.Quality = i.Quality - 2;
+            return -2;            
         }
     }
-
-
-
 
     public class Item
     {
         public string Name { get; set; }
-
         public int SellIn { get; set; }
-
         public int Quality { get; set; }
     }
 
