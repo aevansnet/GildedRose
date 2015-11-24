@@ -109,17 +109,18 @@ namespace GildedRose.Console
     {
         protected override int GetDegradation(Item i)
         {
+            var ret = 1;
             if (i.SellIn < 1)
             {
                 i.Quality = i.Quality + (i.Quality * -1); //force to zero
                 return 0; // we've handled it
             }
-            else if (i.SellIn <= 5 && i.Quality < 48)
-                return 3;
-            else if (i.SellIn <= 10 && i.Quality < 49)
-                return 2;
-            else
-                return 1;
+            if (i.SellIn <= 10)
+                ret++;
+            if (i.SellIn <= 5)
+                ret++;
+
+            return ret;           
         }
     }
 
