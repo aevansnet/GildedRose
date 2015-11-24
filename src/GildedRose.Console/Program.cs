@@ -77,8 +77,13 @@ namespace GildedRose.Console
                 i.Quality = Math.Max(0, Math.Min(newQuality, 50));  //maxium of 50, minimum of 0
             }
 
-            if(!(this is LegendaryQualityUpdater))  // dont like this
-                i.SellIn--;
+            DecrementSellIn(i);         
+                
+        }
+
+        protected virtual void DecrementSellIn(Item i)
+        {
+            i.SellIn--;
         }
 
         /// <summary>
@@ -129,7 +134,11 @@ namespace GildedRose.Console
         protected override int GetDegradation(Item i)
         {
             return 0;
-        }        
+        }
+        protected override void DecrementSellIn(Item i)
+        {
+            // dont decrement sellin
+        }
     }
 
     public class ConjuredQualityUpdater : QualityUpdater
