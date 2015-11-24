@@ -11,8 +11,8 @@ namespace GildedRose.Console
             System.Console.WriteLine("OMGHAI!");
 
             var app = new Program()
-                          {
-                              Items = new List<Item>
+            {
+                Items = new List<Item>
                                           {
                                               new Item {Name = "+5 Dexterity Vest", SellIn = 10, Quality = 20},
                                               new Item {Name = "Aged Brie", SellIn = 2, Quality = 0},
@@ -27,7 +27,7 @@ namespace GildedRose.Console
                                               new Item {Name = "Conjured Mana Cake", SellIn = 3, Quality = 6}
                                           }
 
-                          };
+            };
 
             app.UpdateQuality();
 
@@ -43,8 +43,8 @@ namespace GildedRose.Console
             foreach (var i in items)
             {
                 var updater = QualityUpdater.GetUpdaterForItem(i);
-                updater.UpdateQuality(i);                
-            }           
+                updater.UpdateQuality(i);
+            }
         }
     }
 
@@ -72,13 +72,13 @@ namespace GildedRose.Console
 
             if (degradation != 0)
             {
-                var degradationFactor = i.SellIn < 0 ? 2 : 1;
+                var degradationFactor = i.SellIn < 1 ? 2 : 1;
                 var newQuality = i.Quality + (degradation * degradationFactor);
                 i.Quality = Math.Max(0, Math.Min(newQuality, 50));  //maxium of 50, minimum of 0
             }
 
-            DecrementSellIn(i);         
-                
+            DecrementSellIn(i);
+
         }
 
         protected virtual void DecrementSellIn(Item i)
@@ -98,7 +98,7 @@ namespace GildedRose.Console
     {
         protected override int GetDegradation(Item i)
         {
-            return -1;
+            return -1; // standard items degrade by 1
         }
     }
 
@@ -106,7 +106,7 @@ namespace GildedRose.Console
     {
         protected override int GetDegradation(Item i)
         {
-            return +1;
+            return +1; // brie increases in quality
         }
     }
 
@@ -114,18 +114,20 @@ namespace GildedRose.Console
     {
         protected override int GetDegradation(Item i)
         {
-            var ret = 1;
-            if (i.SellIn < 1)
+
+            if (i.SellIn < 0) // if the show has started!
             {
                 i.Quality = i.Quality + (i.Quality * -1); //force to zero
                 return 0; // we've handled it
             }
-            if (i.SellIn <= 10)
-                ret++;
-            if (i.SellIn <= 5)
-                ret++;
 
-            return ret;           
+            var ret = 1;            // normally increase by 1 per day
+            if (i.SellIn <= 10)
+                ret++;              // an extra 1, 10 days or fewer
+            if (i.SellIn <= 5)
+                ret++;              // and another extra 5 days or fewer
+
+            return ret;
         }
     }
 
@@ -145,7 +147,7 @@ namespace GildedRose.Console
     {
         protected override int GetDegradation(Item i)
         {
-            return -2;            
+            return -2;
         }
     }
 
@@ -157,3 +159,4 @@ namespace GildedRose.Console
     }
 
 }
+
