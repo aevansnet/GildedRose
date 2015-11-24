@@ -86,6 +86,7 @@ namespace GildedRose.Tests
             UpdateQuality(item); // 48
             UpdateQuality(item); // 50
             Assert.Equal(item.Quality, 50); // should be no more than 50!
+            UpdateQuality(item); // 50
             UpdateQuality(item); // 0
             Assert.Equal(item.Quality, 0); // quality drops to zero now date has passed
         }
@@ -102,11 +103,12 @@ namespace GildedRose.Tests
             Assert.Equal(item.SellIn, 1);
             UpdateQuality(item);
             Assert.Equal(item.Quality, 5);
-            Assert.Equal(item.SellIn, 0);                 
+            Assert.Equal(item.SellIn, 0);
+            // double degradation           
             UpdateQuality(item);
-            Assert.Equal(item.Quality, 3);
+            Assert.Equal(item.Quality, 1);
             Assert.Equal(item.SellIn, -1);          
-            // double degradation, but no negative qualitys         
+            // no negatives
             UpdateQuality(item);
             Assert.Equal(item.Quality, 0);
             Assert.Equal(item.SellIn, -2);
@@ -122,15 +124,15 @@ namespace GildedRose.Tests
             UpdateQuality(item);
             Assert.Equal(item.Quality, 3);
             Assert.Equal(item.SellIn, 0);
+            // now double degradation comes into play because of zero sell in.
             UpdateQuality(item);
-            Assert.Equal(item.Quality, 2);
+            Assert.Equal(item.Quality, 1);
             Assert.Equal(item.SellIn, -1);
-            // now double degradation comes into play because of negative sell in.
             UpdateQuality(item);
-            Assert.Equal(item.Quality, 0);
+            Assert.Equal(item.Quality, 0); // quality should not fall bellow 0
             Assert.Equal(item.SellIn, -2);        
             UpdateQuality(item);
-            Assert.Equal(item.Quality, 0);  // quality should not fall bellow 0
+            Assert.Equal(item.Quality, 0); 
             Assert.Equal(item.SellIn, -3);
 
         }
